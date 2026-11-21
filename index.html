@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>漢字タイピング 🍣</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color:#30251b;background:#fff8ec}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px}
+#app{width:min(720px,100%);background:#fff;border:2px solid #f1d7b5;border-radius:22px;padding:clamp(16px,4vw,28px);box-shadow:0 12px 35px #8b5e2720}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}.brand{font-weight:900;font-size:clamp(20px,5vw,28px)}.tag{font-size:12px;color:#92765b}
+.screen{display:none}.screen.active{display:flex;flex-direction:column;gap:14px}
+.panel{background:#fff8ef;border:1px solid #f0ddc5;border-radius:16px;padding:16px}
+.center{text-align:center}.sushi{font-size:48px}.muted{color:#927f6c;font-size:14px}
+button{border:0;border-radius:12px;padding:13px 16px;font-size:16px;font-weight:800;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}.primary{background:#f0a343;color:#39230b}.secondary{background:#f6eadb;color:#593c20;border:1px solid #e9d3b8}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{text-align:center}.stat small{display:block;color:#947c62}.stat strong{font-size:25px}
+.kanji{font-size:clamp(42px,10vw,68px);font-weight:900;line-height:1.35;letter-spacing:.08em}.ruby{height:25px;color:#9b7957;font-size:17px}
+input{width:1px;height:1px;position:fixed;left:0;bottom:0;opacity:.01;padding:0;border:0;outline:0;font-size:16px}input:focus{border-color:#e99b3c}
+#nickname{
+ display:block;width:100%;height:46px;position:static;left:auto;bottom:auto;
+ opacity:1;padding:10px 12px;border:2px solid #e4c9a8;border-radius:10px;
+ outline:none;font-size:16px;line-height:1.3;color:#493522;background:#fff;
+ box-sizing:border-box;margin:10px 0;pointer-events:auto;z-index:2;
+}
+#nickname::placeholder{color:#a89786;opacity:1}
+#nickname:focus{border-color:#e99b3c;box-shadow:0 0 0 3px rgba(233,155,60,.18)}
+.row{display:flex;gap:10px}.row>*{flex:1}.bar{height:9px;background:#f1e5d6;border-radius:20px;overflow:hidden}.bar>div{height:100%;width:0;background:#e99b3c;transition:width .12s}
+#message{min-height:24px;font-weight:700;color:#846341}.rankrow{display:flex;justify-content:space-between;gap:12px;padding:12px;border-radius:10px;background:#fff;border:1px solid #f0e1cf}.foot{font-size:12px;color:#998675;text-align:center}
+@media(max-width:420px){.grid{gap:5px}.stat strong{font-size:21px}.panel{padding:12px}}
+</style>
+</head>
+<body>
+<main id="app">
+<header><div class="brand">🍣 漢字タイピング</div><div class="tag">小学校高学年〜中学3年生・国語</div></header>
+
+<section id="home" class="screen active">
+ <div class="panel center">
+  <div class="sushi">🍣 🍙 🍤</div>
+  <h1>漢字タイピングへようこそ！</h1>
+  <p class="muted">漢字の読みをローマ字で入力して、お寿司をゲットしよう！</p>
+  <div class="grid"><div class="panel stat"><small>制限時間</small><strong>70秒</strong></div><div class="panel stat"><small>正解</small><strong>+100点</strong></div><div class="panel stat"><small>ランキング</small><strong>TOP10</strong></div></div>
+ </div>
+ <button id="start" class="primary">🍣 スタート！</button>
+ <button id="homeRank" class="secondary">🏆 ランキングを見る</button>
+</section>
+
+<section id="difficulty" class="screen">
+ <div class="panel center"><div class="sushi">🎚️</div><h1>難易度を選ぼう！</h1><p class="muted">好きな難しさを選んでね。</p></div>
+ <button class="primary difficulty" data-level="easy">🌱 かんたん（小学6年生くらい） <small>・ゆっくり練習</small></button>
+ <button class="primary difficulty" data-level="normal">🍣 ふつう（中学1年生くらい） <small>・おすすめ</small></button>
+ <button class="primary difficulty" data-level="hard">🔥 むずかしい（中学3年生でも難しい） <small>・チャレンジ</small></button>
+ <button id="difficultyBack" class="secondary">タイトルに戻る</button>
+</section>
+
+<section id="ready" class="screen">
+ <div class="panel center">
+  <div class="sushi">🍣</div>
+  <h1 id="readyTitle">準備はいい？</h1>
+  <p id="readyDescription" class="muted">選んだ難易度でスタートするよ！</p>
+  <div class="panel"><b id="readyLevel">ふつう</b></div>
+  <p class="muted">キーボードの <b>Enter</b> キーを押すとスタート！</p>
+  <button id="readyStart" class="primary">Enterキーでスタート</button>
+  <button id="readyBack" class="secondary">難易度を選び直す</button>
+ </div>
+</section>
+
+<section id="countdown" class="screen">
+ <div class="panel center" style="padding:40px 12px">
+  <div class="sushi">🍣</div>
+  <h1 id="countText" style="font-size:clamp(42px,12vw,76px)">よーい！</h1>
+  <p class="muted">準備してね！</p>
+ </div>
+</section>
+
+<section id="play" class="screen">
+ <div class="grid">
+  <div class="panel stat"><small>残り時間</small><strong id="time">70</strong></div>
+  <div class="panel stat"><small>スコア</small><strong id="score">0</strong></div>
+  <div class="panel stat"><small>正解数</small><strong id="correct">0</strong></div>
+ </div>
+ <div class="panel center">
+  <div class="muted">次の漢字を入力しよう！</div>
+  <div id="furigana" class="ruby"></div>
+  <div id="word" class="kanji">自然</div>
+  <div id="endOverlay" class="kanji" style="display:none;color:#e47722">終了！</div>
+  <div class="muted">読み方をローマ字で入力</div>
+  <div class="bar"><div id="progress"></div></div>
+  <div style="margin-top:12px;text-align:left;font-size:13px;font-weight:700">ノーミスボーナス：<span id="streakLabel">0 / 150文字</span></div>
+  <div style="position:relative;margin-top:5px;padding-bottom:22px">
+   <div class="bar"><div id="streakProgress"></div></div>
+   <span style="position:absolute;left:33.333%;top:12px;transform:translateX(-50%);font-size:11px;color:#b66a18;font-weight:700">＋5秒</span>
+   <span style="position:absolute;left:66.666%;top:12px;transform:translateX(-50%);font-size:11px;color:#b66a18;font-weight:700">＋10秒</span>
+   <span style="position:absolute;right:0;top:12px;font-size:11px;color:#b66a18;font-weight:700">＋15秒</span>
+  </div>
+  <div id="typed" style="min-height:25px;font-weight:700"></div>
+ </div>
+ <div class="panel">
+  <input id="answer" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="ローマ字入力">
+  <p class="muted">Enter：ふりがな表示 ／ ESC：リトライ</p>
+  <div id="message" aria-live="polite">スタート！</div>
+  <button id="finish" class="secondary" disabled>残り5秒で終了できるよ</button>
+ </div>
+ <button id="playRank" class="secondary">🏆 ランキングを見る</button>
+</section>
+
+<section id="result" class="screen">
+ <div class="panel center">
+  <div class="sushi">🏆</div><h1>結果発表！</h1><p class="muted">今回の成績</p>
+  <div id="finalScore" class="kanji">0点</div>
+  <div class="grid"><div class="panel stat"><small>正解数</small><strong id="finalCorrect">0</strong></div><div class="panel stat"><small>ミス数</small><strong id="finalMiss">0</strong></div><div class="panel stat"><small>時間</small><strong>70秒</strong></div></div>
+ </div>
+ <div class="panel">
+  <label for="nickname">ランキングに登録するニックネーム</label>
+  <input id="nickname" type="text" maxlength="12" placeholder="ニックネーム（12文字まで）" autocomplete="nickname" autocapitalize="off" spellcheck="false">
+  <button id="saveRank" class="primary">ランキングに登録</button>
+  <p id="rankSavedMessage" class="muted">ニックネームを入れて登録してね。</p>
+ </div>
+ <button id="again" class="primary">🔄 もう一度タイピング</button>
+ <button id="resultRank" class="secondary">🏆 ランキングを見る</button>
+ <button id="resultHome" class="secondary">タイトルに戻る</button>
+</section>
+
+<section id="ranking" class="screen">
+ <div class="panel center"><div class="sushi">🏆</div><h1>ランキング TOP10</h1><p class="muted">このブラウザに保存された記録</p></div>
+ <div class="grid">
+  <button class="secondary rankLevel" data-rank-level="easy">🌱 かんたん</button>
+  <button class="secondary rankLevel" data-rank-level="normal">🍣 ふつう</button>
+  <button class="secondary rankLevel" data-rank-level="hard">🔥 むずかしい</button>
+ </div>
+ <p id="rankLevelTitle" class="muted center">難易度を選んでね</p>
+ <div id="rankList" class="panel"></div>
+ <button id="rankBack" class="primary">タイピング画面に戻る</button>
+ <button id="rankHome" class="secondary">タイトルに戻る</button>
+</section>
+<p class="foot">スコアはこのブラウザの端末内に保存されます。</p>
+</main>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const questions=[['自然','しぜん']];
+const questionPools={"easy":[["承認","しょうにん"],["権利","けんり"],["沿岸","えんがん"],["源流","げんりゅう"],["討論","とうろん"],["裁判","さいばん"],["誠意","せいい"],["著作","ちょさく"],["展覧","てんらん"],["遺産","いさん"],["補充","ほじゅう"],["貴重","きちょう"],["勤労","きんろう"],["厳守","げんしゅ"],["派遣","はけん"],["拡張","かくちょう"],["危惧","きぐ"],["磁器","じき"],["奮発","ふんぱつ"],["熟成","じゅくせい"],["敬意","けいい"],["責任","せきにん"],["義務","ぎむ"],["権限","けんげん"],["証拠","しょうこ"],["判決","はんけつ"],["法律","ほうりつ"],["規則","きそく"],["条例","じょうれい"],["制度","せいど"],["税金","ぜいきん"],["納税","のうぜい"],["財産","ざいさん"],["資産","しさん"],["資源","しげん"],["資本","しほん"],["利益","りえき"],["損害","そんがい"],["被害","ひがい"],["災害","さいがい"],["救助","きゅうじょ"],["支援","しえん"],["援助","えんじょ"],["協力","きょうりょく"],["参加","さんか"],["賛成","さんせい"],["反対","はんたい"],["批判","ひはん"],["評価","ひょうか"],["判断","はんだん"],["決断","けつだん"],["選択","せんたく"],["希望","きぼう"],["期待","きたい"],["予想","よそう"],["予測","よそく"],["計画","けいかく"],["予定","よてい"],["準備","じゅんび"],["実行","じっこう"],["実現","じつげん"],["達成","たっせい"],["成功","せいこう"],["失敗","しっぱい"],["努力","どりょく"],["挑戦","ちょうせん"],["競争","きょうそう"],["勝利","しょうり"],["敗北","はいぼく"],["優勝","ゆうしょう"],["記録","きろく"],["成績","せいせき"],["結果","けっか"],["原因","げんいん"],["理由","りゆう"],["目的","もくてき"],["目標","もくひょう"],["方法","ほうほう"],["手段","しゅだん"],["効果","こうか"],["影響","えいきょう"],["関係","かんけい"],["関連","かんれん"],["比較","ひかく"],["共通","きょうつう"],["相違","そうい"],["特徴","とくちょう"],["性質","せいしつ"],["状態","じょうたい"],["状況","じょうきょう"],["現象","げんしょう"],["事実","じじつ"],["真実","しんじつ"],["現実","げんじつ"],["想像","そうぞう"],["創造","そうぞう"],["発想","はっそう"],["印象","いんしょう"],["感想","かんそう"],["感情","かんじょう"],["感覚","かんかく"],["意識","いしき"],["知識","ちしき"],["理解","りかい"],["納得","なっとく"],["疑問","ぎもん"],["質問","しつもん"],["回答","かいとう"],["説明","せつめい"],["証明","しょうめい"],["確認","かくにん"],["調査","ちょうさ"],["研究","けんきゅう"],["実験","じっけん"],["観察","かんさつ"],["分析","ぶんせき"],["資料","しりょう"],["情報","じょうほう"],["報告","ほうこく"],["発表","はっぴょう"],["講演","こうえん"],["討議","とうぎ"],["会議","かいぎ"],["議論","ぎろん"],["意見","いけん"],["提案","ていあん"],["相談","そうだん"],["助言","じょげん"],["忠告","ちゅうこく"],["連絡","れんらく"],["通信","つうしん"],["伝達","でんたつ"],["交流","こうりゅう"],["交際","こうさい"],["協議","きょうぎ"],["合意","ごうい"],["約束","やくそく"],["契約","けいやく"],["条件","じょうけん"],["基準","きじゅん"],["規模","きぼ"],["範囲","はんい"],["限界","げんかい"],["制限","せいげん"],["許可","きょか"],["禁止","きんし"],["注意","ちゅうい"],["警告","けいこく"],["危険","きけん"],["安全","あんぜん"],["安心","あんしん"],["健康","けんこう"],["衛生","えいせい"],["医療","いりょう"],["治療","ちりょう"],["診断","しんだん"],["症状","しょうじょう"],["予防","よぼう"],["栄養","えいよう"],["運動","うんどう"],["休憩","きゅうけい"],["睡眠","すいみん"],["疲労","ひろう"],["回復","かいふく"],["成長","せいちょう"],["発達","はったつ"],["発育","はついく"],["変化","へんか"],["進歩","しんぽ"],["発展","はってん"],["改善","かいぜん"],["修正","しゅうせい"],["変更","へんこう"],["追加","ついか"],["削除","さくじょ"],["整理","せいり"],["整備","せいび"],["管理","かんり"],["保存","ほぞん"],["保護","ほご"],["維持","いじ"],["継続","けいぞく"],["中断","ちゅうだん"],["再開","さいかい"],["終了","しゅうりょう"],["開始","かいし"],["完成","かんせい"],["製作","せいさく"],["制作","せいさく"],["製造","せいぞう"],["加工","かこう"],["建設","けんせつ"],["建築","けんちく"],["設計","せっけい"],["構造","こうぞう"],["設備","せつび"],["施設","しせつ"],["建物","たてもの"],["住宅","じゅうたく"],["土地","とち"],["地面","じめん"],["地形","ちけい"],["地帯","ちたい"],["地域","ちいき"],["地方","ちほう"],["都市","とし"],["都会","とかい"],["郊外","こうがい"],["農村","のうそん"],["農業","のうぎょう"],["牧場","ぼくじょう"],["漁業","ぎょぎょう"],["工業","こうぎょう"],["産業","さんぎょう"],["商業","しょうぎょう"],["貿易","ぼうえき"],["輸出","ゆしゅつ"],["輸入","ゆにゅう"],["運輸","うんゆ"],["交通","こうつう"],["道路","どうろ"],["鉄道","てつどう"],["線路","せんろ"],["駅前","えきまえ"],["空港","くうこう"],["港湾","こうわん"],["船舶","せんぱく"],["航空","こうくう"],["旅行","りょこう"],["観光","かんこう"],["移動","いどう"],["移住","いじゅう"],["引越","ひっこし"],["出発","しゅっぱつ"],["到着","とうちゃく"],["往復","おうふく"],["通過","つうか"],["経由","けいゆ"],["方向","ほうこう"],["位置","いち"],["距離","きょり"],["速度","そくど"],["加速","かそく"],["減速","げんそく"],["温度","おんど"],["気温","きおん"],["湿度","しつど"],["気圧","きあつ"],["天候","てんこう"],["気候","きこう"],["季節","きせつ"],["気象","きしょう"],["天気","てんき"],["晴天","せいてん"],["雨天","うてん"],["台風","たいふう"],["暴風","ぼうふう"],["豪雨","ごうう"],["洪水","こうずい"],["地震","じしん"],["津波","つなみ"],["噴火","ふんか"],["火山","かざん"],["地層","ちそう"],["岩石","がんせき"],["鉱物","こうぶつ"],["結晶","けっしょう"],["金属","きんぞく"],["物質","ぶっしつ"],["元素","げんそ"],["原子","げんし"],["分子","ぶんし"],["細胞","さいぼう"],["組織","そしき"],["器官","きかん"],["生物","せいぶつ"],["植物","しょくぶつ"],["動物","どうぶつ"],["昆虫","こんちゅう"],["哺乳","ほにゅう"],["野生","やせい"],["自然","しぜん"],["環境","かんきょう"],["森林","しんりん"],["草原","そうげん"],["平野","へいや"],["高原","こうげん"],["山脈","さんみゃく"],["河川","かせん"],["河口","かこう"],["湖畔","こはん"],["海岸","かいがん"],["海底","かいてい"],["海洋","かいよう"],["大陸","たいりく"],["半島","はんとう"],["島国","しまぐに"],["大気","たいき"],["酸素","さんそ"],["水素","すいそ"],["外交","がいこう"],["電気","でんき"],["電池","でんち"],["電流","でんりゅう"],["電圧","でんあつ"],["磁石","じしゃく"],["磁力","じりょく"],["光線","こうせん"],["反射","はんしゃ"],["屈折","くっせつ"],["音波","おんぱ"],["振動","しんどう"],["熱量","ねつりょう"],["燃料","ねんりょう"],["燃焼","ねんしょう"],["蒸発","じょうはつ"],["凝固","ぎょうこ"],["溶解","ようかい"],["混合","こんごう"],["分離","ぶんり"],["濃度","のうど"],["密度","みつど"],["体積","たいせき"],["面積","めんせき"],["容積","ようせき"],["重量","じゅうりょう"],["質量","しつりょう"],["割合","わりあい"],["比率","ひりつ"],["平均","へいきん"],["合計","ごうけい"],["総計","そうけい"],["数値","すうち"],["整数","せいすう"],["小数","しょうすう"],["分数","ぶんすう"],["図形","ずけい"],["直線","ちょくせん"],["曲線","きょくせん"],["角度","かくど"],["半径","はんけい"],["直径","ちょっけい"],["円周","えんしゅう"],["対称","たいしょう"],["平行","へいこう"],["垂直","すいちょく"],["座標","ざひょう"],["方程","ほうてい"],["関数","かんすう"],["公式","こうしき"],["計算","けいさん"],["暗算","あんざん"],["筆算","ひっさん"],["測定","そくてい"],["単位","たんい"],["尺度","しゃくど"],["文章","ぶんしょう"],["作文","さくぶん"],["読書","どくしょ"],["読解","どっかい"],["読者","どくしゃ"],["著者","ちょしゃ"],["作品","さくひん"],["小説","しょうせつ"],["物語","ものがたり"],["詩歌","しいか"],["俳句","はいく"],["短歌","たんか"],["文学","ぶんがく"],["芸術","げいじゅつ"],["美術","びじゅつ"],["音楽","おんがく"],["演奏","えんそう"],["楽器","がっき"],["合唱","がっしょう"],["劇場","げきじょう"],["演劇","えんげき"],["映画","えいが"],["映像","えいぞう"],["写真","しゃしん"],["絵画","かいが"],["彫刻","ちょうこく"],["文化","ぶんか"],["伝統","でんとう"],["歴史","れきし"],["時代","じだい"],["古代","こだい"],["近代","きんだい"],["現代","げんだい"],["文明","ぶんめい"],["遺跡","いせき"],["遺物","いぶつ"],["史料","しりょう"],["年表","ねんぴょう"],["年代","ねんだい"],["世紀","せいき"],["王国","おうこく"],["国家","こっか"],["政府","せいふ"],["政治","せいじ"]],"normal":[["概念","がいねん"],["抽象","ちゅうしょう"],["矛盾","むじゅん"],["懸念","けねん"],["促進","そくしん"],["克服","こくふく"],["著名","ちょめい"],["顕著","けんちょ"],["模索","もさく"],["妥協","だきょう"],["把握","はあく"],["措置","そち"],["膨大","ぼうだい"],["憂慮","ゆうりょ"],["貢献","こうけん"],["秩序","ちつじょ"],["遂行","すいこう"],["介入","かいにゅう"],["脅威","きょうい"],["精密","せいみつ"],["論理","ろんり"],["推測","すいそく"],["仮説","かせつ"],["検証","けんしょう"],["根拠","こんきょ"],["証拠","しょうこ"],["主張","しゅちょう"],["批判","ひはん"],["評価","ひょうか"],["判断","はんだん"],["選択","せんたく"],["決断","けつだん"],["比較","ひかく"],["分析","ぶんせき"],["考察","こうさつ"],["解釈","かいしゃく"],["認識","にんしき"],["理解","りかい"],["把持","はじ"],["適応","てきおう"],["応用","おうよう"],["構成","こうせい"],["構造","こうぞう"],["機能","きのう"],["原理","げんり"],["法則","ほうそく"],["規則","きそく"],["規範","きはん"],["制度","せいど"],["政策","せいさく"],["方針","ほうしん"],["戦略","せんりゃく"],["計画","けいかく"],["実施","じっし"],["達成","たっせい"],["実現","じつげん"],["維持","いじ"],["管理","かんり"],["運営","うんえい"],["調整","ちょうせい"],["改善","かいぜん"],["改革","かいかく"],["発展","はってん"],["進歩","しんぽ"],["変革","へんかく"],["変遷","へんせん"],["推移","すいい"],["傾向","けいこう"],["現象","げんしょう"],["状況","じょうきょう"],["状態","じょうたい"],["現状","げんじょう"],["実態","じったい"],["実情","じつじょう"],["事情","じじょう"],["背景","はいけい"],["要因","よういん"],["原因","げんいん"],["結果","けっか"],["影響","えいきょう"],["効果","こうか"],["作用","さよう"],["反応","はんのう"],["現実","げんじつ"],["事実","じじつ"],["真実","しんじつ"],["虚偽","きょぎ"],["誤解","ごかい"],["錯覚","さっかく"],["誤差","ごさ"],["差異","さい"],["相違","そうい"],["共通","きょうつう"],["相互","そうご"],["対立","たいりつ"],["協調","きょうちょう"],["連携","れんけい"],["協力","きょうりょく"],["競争","きょうそう"],["対抗","たいこう"],["優劣","ゆうれつ"],["均衡","きんこう"],["平衡","へいこう"],["調和","ちょうわ"],["矛先","ほこさき"],["障害","しょうがい"],["困難","こんなん"],["難題","なんだい"],["課題","かだい"],["問題","もんだい"],["解決","かいけつ"],["対策","たいさく"],["対応","たいおう"],["処理","しょり"],["処置","しょち"],["対処","たいしょ"],["回避","かいひ"],["防止","ぼうし"],["予防","よぼう"],["警戒","けいかい"],["危険","きけん"],["安全","あんぜん"],["脅迫","きょうはく"],["災害","さいがい"],["被害","ひがい"],["損害","そんがい"],["損失","そんしつ"],["被災","ひさい"],["復旧","ふっきゅう"],["復興","ふっこう"],["救援","きゅうえん"],["支援","しえん"],["援助","えんじょ"],["保護","ほご"],["保障","ほしょう"],["保全","ほぜん"],["保管","ほかん"],["保存","ほぞん"],["監視","かんし"],["観察","かんさつ"],["調査","ちょうさ"],["研究","けんきゅう"],["実験","じっけん"],["実証","じっしょう"],["証明","しょうめい"],["発見","はっけん"],["発明","はつめい"],["開発","かいはつ"],["創造","そうぞう"],["想像","そうぞう"],["創作","そうさく"],["制作","せいさく"],["表現","ひょうげん"],["描写","びょうしゃ"],["記述","きじゅつ"],["記録","きろく"],["報告","ほうこく"],["発表","はっぴょう"],["説明","せつめい"],["解説","かいせつ"],["紹介","しょうかい"],["伝達","でんたつ"],["通信","つうしん"],["情報","じょうほう"],["知識","ちしき"],["知恵","ちえ"],["知性","ちせい"],["才能","さいのう"],["能力","のうりょく"],["技術","ぎじゅつ"],["技能","ぎのう"],["技量","ぎりょう"],["熟練","じゅくれん"],["経験","けいけん"],["体験","たいけん"],["実績","じっせき"],["成果","せいか"],["功績","こうせき"],["責任","せきにん"],["義務","ぎむ"],["権利","けんり"],["自由","じゆう"],["平等","びょうどう"],["公平","こうへい"],["公正","こうせい"],["正義","せいぎ"],["倫理","りんり"],["道徳","どうとく"],["良識","りょうしき"],["常識","じょうしき"],["規律","きりつ"],["礼儀","れいぎ"],["尊重","そんちょう"],["尊敬","そんけい"],["敬意","けいい"],["配慮","はいりょ"],["遠慮","えんりょ"],["謙虚","けんきょ"],["謙遜","けんそん"],["誠実","せいじつ"],["真摯","しんし"],["慎重","しんちょう"],["冷静","れいせい"],["沈着","ちんちゃく"],["大胆","だいたん"],["勇敢","ゆうかん"],["果敢","かかん"],["忍耐","にんたい"],["辛抱","しんぼう"],["努力","どりょく"],["奮闘","ふんとう"],["挑戦","ちょうせん"],["冒険","ぼうけん"],["決意","けつい"],["意志","いし"],["意欲","いよく"],["意識","いしき"],["意図","いと"],["目的","もくてき"],["目標","もくひょう"],["志望","しぼう"],["希望","きぼう"],["願望","がんぼう"],["欲望","よくぼう"],["欲求","よっきゅう"],["感情","かんじょう"],["心理","しんり"],["心情","しんじょう"],["感覚","かんかく"],["感性","かんせい"],["感動","かんどう"],["感謝","かんしゃ"],["感激","かんげき"],["感心","かんしん"],["共感","きょうかん"],["同情","どうじょう"],["憐憫","れんびん"],["憂鬱","ゆううつ"],["不安","ふあん"],["恐怖","きょうふ"],["緊張","きんちょう"],["安心","あんしん"],["安堵","あんど"],["満足","まんぞく"],["不満","ふまん"],["不服","ふふく"],["不快","ふかい"],["快適","かいてき"],["幸福","こうふく"],["不幸","ふこう"],["喜怒","きど"],["悲哀","ひあい"],["怒号","どごう"],["激励","げきれい"],["慰労","いろう"],["励行","れいこう"],["奨励","しょうれい"],["忠告","ちゅうこく"],["助言","じょげん"],["忠実","ちゅうじつ"],["誠意","せいい"],["熱意","ねつい"],["情熱","じょうねつ"],["執念","しゅうねん"],["執着","しゅうちゃく"],["固執","こしつ"],["偏見","へんけん"],["先入","せんにゅう"],["固定","こてい"],["柔軟","じゅうなん"],["弾力","だんりょく"],["融通","ゆうずう"],["寛容","かんよう"],["寛大","かんだい"],["厳格","げんかく"],["厳密","げんみつ"],["精巧","せいこう"],["精細","せいさい"],["詳細","しょうさい"],["明確","めいかく"],["明瞭","めいりょう"],["鮮明","せんめい"],["曖昧","あいまい"],["漠然","ばくぜん"],["簡潔","かんけつ"],["簡素","かんそ"],["複雑","ふくざつ"],["単純","たんじゅん"],["容易","ようい"],["微妙","びみょう"],["絶妙","ぜつみょう"],["巧妙","こうみょう"],["奇妙","きみょう"],["異常","いじょう"],["正常","せいじょう"],["特殊","とくしゅ"],["独特","どくとく"],["独自","どくじ"],["固有","こゆう"],["一般","いっぱん"],["普遍","ふへん"],["典型","てんけい"],["代表","だいひょう"],["象徴","しょうちょう"],["比喩","ひゆ"],["暗示","あんじ"],["示唆","しさ"],["含意","がんい"],["意味","いみ"],["意義","いぎ"],["価値","かち"],["批評","ひひょう"],["評論","ひょうろん"],["論争","ろんそう"],["議論","ぎろん"],["討論","とうろん"],["論点","ろんてん"],["論拠","ろんきょ"],["結論","けつろん"],["推論","すいろん"],["反論","はんろん"],["異論","いろん"],["持論","じろん"],["理論","りろん"],["仮定","かてい"],["前提","ぜんてい"],["条件","じょうけん"],["制約","せいやく"],["限定","げんてい"],["範囲","はんい"],["領域","りょういき"],["分野","ぶんや"],["分布","ぶんぷ"],["分類","ぶんるい"],["区分","くぶん"],["区別","くべつ"],["識別","しきべつ"],["選別","せんべつ"],["選定","せんてい"],["選考","せんこう"],["採用","さいよう"],["採択","さいたく"],["決定","けってい"],["確定","かくてい"],["確信","かくしん"],["確証","かくしょう"],["確保","かくほ"],["確立","かくりつ"],["成立","せいりつ"],["設立","せつりつ"],["創立","そうりつ"],["設置","せっち"],["配置","はいち"],["設計","せっけい"],["構築","こうちく"],["建設","けんせつ"],["建造","けんぞう"],["建築","けんちく"],["施工","せこう"],["実装","じっそう"],["装置","そうち"],["設備","せつび"],["施設","しせつ"],["機材","きざい"],["器具","きぐ"],["備品","びひん"],["資材","しざい"],["材料","ざいりょう"],["原料","げんりょう"],["素材","そざい"],["資源","しげん"],["資産","しさん"],["財産","ざいさん"],["財政","ざいせい"],["経済","けいざい"],["金融","きんゆう"],["投資","とうし"],["利益","りえき"],["損益","そんえき"],["収益","しゅうえき"],["収入","しゅうにゅう"],["支出","ししゅつ"],["予算","よさん"],["費用","ひよう"],["価格","かかく"],["価額","かがく"],["市場","しじょう"],["需要","じゅよう"],["供給","きょうきゅう"],["流通","りゅうつう"],["消費","しょうひ"],["生産","せいさん"],["製造","せいぞう"],["加工","かこう"],["販売","はんばい"],["輸送","ゆそう"],["貿易","ぼうえき"],["輸出","ゆしゅつ"],["輸入","ゆにゅう"],["契約","けいやく"]],"hard":[["脆弱","ぜいじゃく"],["錯綜","さくそう"],["懐柔","かいじゅう"],["蹂躙","じゅうりん"],["乖離","かいり"],["隘路","あいろ"],["矜持","きょうじ"],["忖度","そんたく"],["憔悴","しょうすい"],["懊悩","おうのう"],["謄写","とうしゃ"],["漸進","ぜんしん"],["逼迫","ひっぱく"],["諧謔","かいぎゃく"],["逡巡","しゅんじゅん"],["牽制","けんせい"],["憂愁","ゆうしゅう"],["瑕疵","かし"],["膠着","こうちゃく"],["斟酌","しんしゃく"],["縮小","しゅくしょう"],["軍隊","ぐんたい"],["遊園","ゆうえん"],["郵便","ゆうびん"],["丁寧","ていねい"],["没頭","ぼっとう"],["乾燥","かんそう"],["殺菌","さっきん"],["骨董","こっとう"],["救急","きゅうきゅう"],["乗客","じょうきゃく"],["週末","しゅうまつ"],["群衆","ぐんしゅう"],["操縦","そうじゅう"],["洗浄","せんじょう"],["招待","しょうたい"],["釈放","しゃくほう"],["兄弟","きょうだい"],["投票","とうひょう"],["申込","もうしこみ"],["朝食","ちょうしょく"],["昼食","ちゅうしょく"],["供述","きょうじゅつ"],["参照","さんしょう"],["損傷","そんしょう"],["永遠","えいえん"],["監督","かんとく"],["崩壊","ほうかい"],["看板","かんばん"],["清潔","せいけつ"],["洗濯","せんたく"],["譲歩","じょうほ"],["歓迎","かんげい"],["表彰","ひょうしょう"],["習慣","しゅうかん"],["教室","きょうしつ"],["消耗","しょうもう"],["消毒","しょうどく"],["承諾","しょうだく"],["勉強","べんきょう"],["瞬間","しゅんかん"],["編集","へんしゅう"],["強烈","きょうれつ"],["交渉","こうしょう"],["報酬","ほうしゅう"],["逆転","ぎゃくてん"],["消極","しょうきょく"],["了承","りょうしょう"],["毎月","まいつき"],["真剣","しんけん"],["恋愛","れんあい"],["停滞","ていたい"],["執筆","しっぴつ"],["管轄","かんかつ"],["添削","てんさく"],["鍛錬","たんれん"],["片付","かたづけ"],["売買","ばいばい"],["宣誓","せんせい"],["申請","しんせい"],["窓口","まどぐち"],["拘束","こうそく"],["車両","しゃりょう"],["駐車","ちゅうしゃ"],["宿題","しゅくだい"],["購入","こうにゅう"],["標準","ひょうじゅん"],["夕食","ゆうしょく"],["副食","ふくしょく"],["毎週","まいしゅう"],["最終","さいしゅう"],["順番","じゅんばん"],["順序","じゅんじょ"],["探求","たんきゅう"],["好況","こうきょう"],["秀逸","しゅういつ"],["昔話","むかしばなし"],["休暇","きゅうか"],["役割","やくわり"],["排除","はいじょ"],["欠乏","けつぼう"],["刷新","さっしん"],["残高","ざんだか"],["祝賀","しゅくが"],["師匠","ししょう"],["犯罪","はんざい"],["訴訟","そしょう"],["授業","じゅぎょう"],["卒業","そつぎょう"],["出版","しゅっぱん"],["借金","しゃっきん"],["表札","ひょうさつ"],["風俗","ふうぞく"],["労働","ろうどう"],["包装","ほうそう"],["教科","きょうか"],["偶然","ぐうぜん"],["双方","そうほう"],["一斉","いっせい"],["軽減","けいげん"],["過剰","かじょう"],["化粧","けしょう"],["独占","どくせん"],["圧倒","あっとう"],["昇給","しょうきゅう"],["商店","しょうてん"],["積極","せっきょく"],["追求","ついきゅう"],["乗船","じょうせん"],["従業","じゅうぎょう"],["番号","ばんごう"],["免許","めんきょ"],["周囲","しゅうい"],["卓越","たくえつ"],["抜群","ばつぐん"],["故障","こしょう"],["清掃","せいそう"],["攻撃","こうげき"],["健闘","けんとう"],["勧誘","かんゆう"],["誘導","ゆうどう"],["経営","けいえい"],["校舎","こうしゃ"],["校庭","こうてい"],["簡単","かんたん"],["捜索","そうさく"],["校閲","こうえつ"],["整頓","せいとん"],["劣勢","れっせい"],["贈呈","ぞうてい"],["恩恵","おんけい"],["就職","しゅうしょく"],["転換","てんかん"],["転居","てんきょ"],["原稿","げんこう"],["補償","ほしょう"],["勝負","しょうぶ"],["陳述","ちんじゅつ"],["長所","ちょうしょ"],["共存","きょうぞん"],["優良","ゆうりょう"],["境界","きょうかい"],["教訓","きょうくん"],["途中","とちゅう"],["夢中","むちゅう"],["選挙","せんきょ"],["惜敗","せきはい"],["修養","しゅうよう"],["仲介","ちゅうかい"],["広告","こうこく"],["早退","そうたい"],["降格","こうかく"],["哲学","てつがく"],["微量","びりょう"],["塩味","しおあじ"],["上昇","じょうしょう"],["休職","きゅうしょく"],["信頼","しんらい"],["倹約","けんやく"],["運搬","うんぱん"],["運賃","うんちん"],["約款","やっかん"],["返却","へんきゃく"],["改良","かいりょう"],["翌日","よくじつ"],["兆候","ちょうこう"],["救済","きゅうさい"],["探究","たんきゅう"],["条項","じょうこう"],["強調","きょうちょう"],["収集","しゅうしゅう"],["就業","しゅうぎょう"],["解散","かいさん"],["夜食","やしょく"],["珍品","ちんぴん"],["接戦","せっせん"],["法廷","ほうてい"],["最初","さいしょ"],["親切","しんせつ"],["温厚","おんこう"],["興奮","こうふん"],["専門","せんもん"],["混乱","こんらん"],["乱雑","らんざつ"],["撤去","てっきょ"],["香辛","こうしん"],["冷蔵","れいぞう"],["冷凍","れいとう"],["貯蔵","ちょぞう"],["貯蓄","ちょちく"],["低額","ていがく"],["宝石","ほうせき"],["種別","しゅべつ"],["攻守","こうしゅ"],["検討","けんとう"],["登録","とうろく"],["来訪","らいほう"],["刑罰","けいばつ"],["免責","めんせき"],["評判","ひょうばん"],["推奨","すいしょう"],["魅力","みりょく"],["分裂","ぶんれつ"],["少量","しょうりょう"],["堅実","けんじつ"],["弱点","じゃくてん"],["退却","たいきゃく"],["登場","とうじょう"],["明白","めいはく"],["合併","がっぺい"],["肯定","こうてい"],["優秀","ゆうしゅう"],["収録","しゅうろく"],["収納","しゅうのう"],["精進","しょうじん"],["日常","にちじょう"],["通常","つうじょう"],["追究","ついきゅう"],["標識","ひょうしき"],["商談","しょうだん"],["祝福","しゅくふく"],["飲食","いんしょく"],["食卓","しょくたく"],["主食","しゅしょく"],["給料","きゅうりょう"],["適切","てきせつ"],["更新","こうしん"],["株式","かぶしき"],["財宝","ざいほう"],["希少","きしょう"],["祭典","さいてん"],["追憶","ついおく"],["賞与","しょうよ"],["訪問","ほうもん"],["集団","しゅうだん"],["着席","ちゃくせき"],["着陸","ちゃくりく"],["傑出","けっしゅつ"],["集中","しゅうちゅう"],["飲料","いんりょう"],["香料","こうりょう"],["発端","ほったん"],["発酵","はっこう"],["職員","しょくいん"],["就任","しゅうにん"],["住民","じゅうみん"],["住所","じゅうしょ"],["教育","きょういく"],["減少","げんしょう"],["領空","りょうくう"],["減給","げんきゅう"],["親族","しんぞく"],["親友","しんゆう"],["裏側","うらがわ"],["混雑","こんざつ"],["筆者","ひっしゃ"],["処罰","しょばつ"],["国際","こくさい"],["防衛","ぼうえい"],["訓練","くんれん"],["短所","たんしょ"],["全般","ぜんぱん"],["領土","りょうど"],["防災","ぼうさい"],["防御","ぼうぎょ"],["前兆","ぜんちょう"],["懸命","けんめい"],["検索","けんさく"],["同盟","どうめい"],["祭礼","さいれい"],["敬遠","けいえん"],["命令","めいれい"],["介抱","かいほう"],["風習","ふうしゅう"],["練習","れんしゅう"],["心境","しんきょう"],["国境","こっきょう"],["消防","しょうぼう"],["友情","ゆうじょう"],["愛情","あいじょう"],["受賞","じゅしょう"],["上空","じょうくう"],["完勝","かんしょう"],["協賛","きょうさん"],["職業","しょくぎょう"],["制御","せいぎょ"],["採掘","さいくつ"],["改築","かいちく"],["改訂","かいてい"],["種目","しゅもく"],["反撃","はんげき"],["欠席","けっせき"],["毎年","まいとし"],["警察","けいさつ"],["携帯","けいたい"],["陳列","ちんれつ"],["乗組","のりくみ"],["新鮮","しんせん"],["高額","こうがく"],["願書","がんしょ"],["共同","きょうどう"],["領海","りょうかい"],["出席","しゅっせき"],["創業","そうぎょう"],["証書","しょうしょ"],["乗車","じょうしゃ"],["熟考","じゅっこう"],["秀作","しゅうさく"],["落選","らくせん"],["概要","がいよう"],["連盟","れんめい"],["選抜","せんばつ"],["送迎","そうげい"],["背表","せびょうし"],["競合","きょうごう"],["少数","しょうすう"],["昇格","しょうかく"],["欠場","けつじょう"],["出場","しゅつじょう"],["共有","きょうゆう"],["向上","こうじょう"],["受領","じゅりょう"],["圧勝","あっしょう"],["現在","げんざい"],["対等","たいとう"],["複数","ふくすう"],["担当","たんとう"],["多量","たりょう"],["勧告","かんこく"],["条約","じょうやく"],["昇進","しょうしん"],["入社","にゅうしゃ"],["民族","みんぞく"],["全員","ぜんいん"],["必然","ひつぜん"],["功労","こうろう"],["撤回","てっかい"],["削減","さくげん"],["結束","けっそく"],["団結","だんけつ"],["内側","うちがわ"],["鍛練","たんれん"],["宅配","たくはい"],["拡大","かくだい"],["休日","きゅうじつ"],["祝日","しゅくじつ"],["熱中","ねっちゅう"],["習得","しゅうとく"],["伝承","でんしょう"],["表情","ひょうじょう"],["商品","しょうひん"],["食材","しょくざい"],["賞品","しょうひん"],["戦術","せんじゅつ"],["初日","しょにち"],["確率","かくりつ"],["昔日","せきじつ"],["厚生","こうせい"],["保釈","ほしゃく"],["恩返","おんがえし"],["強制","きょうせい"],["採集","さいしゅう"],["改修","かいしゅう"],["修復","しゅうふく"],["海上","かいじょう"],["学習","がくしゅう"],["革新","かくしん"],["式典","しきてん"],["出典","しゅってん"],["弁解","べんかい"],["訂正","ていせい"],["解凍","かいとう"],["逸品","いっぴん"],["善戦","ぜんせん"],["賞金","しょうきん"],["礼節","れいせつ"],["競技","きょうぎ"],["活躍","かつやく"],["予兆","よちょう"],["探索","たんさく"]]};
+
+const base={'あ':['a'],'い':['i'],'う':['u'],'え':['e'],'お':['o'],'か':['ka'],'き':['ki'],'く':['ku'],'け':['ke'],'こ':['ko'],'さ':['sa'],'し':['shi','si'],'す':['su'],'せ':['se'],'そ':['so'],'た':['ta'],'ち':['chi','ti'],'つ':['tsu','tu'],'て':['te'],'と':['to'],'な':['na'],'に':['ni'],'ぬ':['nu'],'ね':['ne'],'の':['no'],'は':['ha'],'ひ':['hi'],'ふ':['fu','hu'],'へ':['he'],'ほ':['ho'],'ま':['ma'],'み':['mi'],'む':['mu'],'め':['me'],'も':['mo'],'や':['ya'],'ゆ':['yu'],'よ':['yo'],'ら':['ra'],'り':['ri'],'る':['ru'],'れ':['re'],'ろ':['ro'],'わ':['wa'],'を':['wo'],'ん':['n','nn'],'が':['ga'],'ぎ':['gi'],'ぐ':['gu'],'げ':['ge'],'ご':['go'],'ざ':['za'],'じ':['ji','zi'],'ず':['zu'],'ぜ':['ze'],'ぞ':['zo'],'だ':['da'],'ぢ':['di'],'づ':['du'],'で':['de'],'ど':['do'],'ば':['ba'],'び':['bi'],'ぶ':['bu'],'べ':['be'],'ぼ':['bo'],'ぱ':['pa'],'ぴ':['pi'],'ぷ':['pu'],'ぺ':['pe'],'ぽ':['po'],'きゃ':['kya'],'きゅ':['kyu'],'きょ':['kyo'],'しゃ':['sha','sya'],'しゅ':['shu','syu'],'しょ':['sho','syo'],'ちゃ':['cha','tya'],'ちゅ':['chu','tyu'],'ちょ':['cho','tyo'],'にゃ':['nya'],'にゅ':['nyu'],'にょ':['nyo'],'ひゃ':['hya'],'ひゅ':['hyu'],'ひょ':['hyo'],'りゃ':['rya'],'りゅ':['ryu'],'りょ':['ryo'],'じゃ':['ja','zya'],'じゅ':['ju','zyu'],'じょ':['jo','zyo'],'ぎゃ':['gya'],'ぎゅ':['gyu'],'ぎょ':['gyo'],'びゃ':['bya'],'びゅ':['byu'],'びょ':['byo'],'ぴゃ':['pya'],'ぴゅ':['pyu'],'ぴょ':['pyo'],'みゃ':['mya'],'みゅ':['myu'],'みょ':['myo']};
+let screen='home',time=70,score=0,correct=0,miss=0,current=null,deck=[],timer=null,countTimer=null,shown=false,locked=false,advancing=false,variants=[],difficulty='normal',duration=70;
+ let noMissChars=0,bonusStage=0,lastCountedValue='',hintUsed=false;
+function view(name){screen=name;document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===name));}
+function audio(freq,duration=.065,type='square',volume=.035){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const ctx=audio.ctx||(audio.ctx=new C());if(ctx.state==='suspended')ctx.resume();const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(volume,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+duration);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+duration)}catch(e){}}
+function tapSound(){audio(510,.035,'square',.018)}
+function startButtonSound(){
+ // Restore the earlier soft two-note "ぽよん" sound.
+ audio(440,.10,'sine',.055);
+ setTimeout(()=>audio(660,.13,'sine',.045),65);
+}
+function goodSound(){audio(820,.11,'sine',.06);setTimeout(()=>audio(1100,.13,'sine',.045),75)}
+function bonusSound(){audio(880,.14,'sine',.13);setTimeout(()=>audio(1175,.18,'sine',.12),95);setTimeout(()=>audio(1568,.28,'sine',.115),210)}
+function countdownSound(final=false){if(final){audio(1046,.48,'sine',.075);setTimeout(()=>audio(1568,.34,'sine',.055),180)}else{audio(520,.16,'sine',.065)}}
+function badSound(){audio(170,.16,'sawtooth',.045)}
+function finishBeep(){
+ // Short "ピッ、ピー" finish sound.
+ audio(880,.14,'square',.055);
+ setTimeout(()=>audio(880,.48,'square',.055),220);
+}
+let musicTimer=null,musicStep=0,musicMode='';
+function stopMusic(){if(musicTimer)clearInterval(musicTimer);musicTimer=null;musicMode='';}
+function musicNote(freq,duration,volume=.018){audio(freq,duration,'sine',volume);}
+function startMusic(mode){
+ if(musicMode===mode&&musicTimer)return;
+ stopMusic();musicMode=mode;musicStep=0;
+ const menu=[392,494,587,494,440,523,659,523,392,494,587,659,587,494,440,494];
+ const game=[523,659,784,659,587,740,880,740,523,659,784,988,880,784,659,587];
+ const notes=mode==='menu'?menu:game,interval=mode==='menu'?420:245;
+ const play=()=>{const f=notes[musicStep%notes.length];musicNote(f,mode==='menu'?.22:.13,mode==='menu'?.014:.012);if(mode==='game'&&musicStep%4===0)musicNote(f/2,.11,.009);musicStep++;};
+ play();musicTimer=setInterval(play,interval);
+}
+function toVariants(reading){
+ let units=[];
+ for(let i=0;i<reading.length;i++){
+  if(reading[i]==='っ'){units.push('っ');continue;}
+  const pair=reading.slice(i,i+2);
+  if(base[pair]){units.push(pair);i++;}else units.push(reading[i]);
+ }
+ let out=[''],geminate=false;
+ for(let unitIndex=0;unitIndex<units.length;unitIndex++){
+  const u=units[unitIndex];
+  if(u==='っ'){geminate=true;continue;}
+  let opts=base[u]||[];
+  // 読みの最後が「ん」の場合だけ、nn の入力を必須にする
+  if(u==='ん' && unitIndex===units.length-1)opts=['nn'];
+  if(geminate){opts=opts.map(o=>o.length>1&&o[0]==='c'?'t'+o:o[0]+o);geminate=false;}
+  out=out.flatMap(a=>opts.map(o=>a+o));
+  if(out.length>500)out=out.slice(0,500);
+ }
+ return out;
+}
+function updateStreakUI(){
+  $('streakProgress').style.width=(noMissChars/150*100)+'%';
+  $('streakLabel').textContent=noMissChars+' / 150文字';
+ }
+ function countCleanLetters(value){
+  const added=Math.max(0,value.length-lastCountedValue.length);
+  if(added>0){
+   noMissChars+=added;
+   while(bonusStage<3 && noMissChars>=(bonusStage+1)*50){
+    const bonus=[5,10,15][bonusStage];
+    time+=bonus;
+    bonusSound();
+    $('time').textContent=time;
+    $('message').textContent='✨ ノーミスボーナス！ ＋'+bonus+'秒！';
+    goodSound();
+    bonusStage++;
+    if(bonusStage===3){
+     noMissChars=0;
+     bonusStage=0;
+    }
+   }
+   updateStreakUI();
+  }
+  lastCountedValue=value;
+ }
+ function resetStreak(){
+  noMissChars=0;bonusStage=0;lastCountedValue='';updateStreakUI();
+ }
+ function pick(){
+ lastCountedValue='';hintUsed=false;
+ if(!deck.length){
+  deck=(questionPools[difficulty]||questionPools.normal).slice().sort(()=>Math.random()-.5);
+ }
+ if(!deck.length){end();return;}
+ current=deck.pop();variants=toVariants(current[1]);shown=false;
+ $('word').textContent=current[0];$('furigana').textContent='';$('answer').value='';
+ $('typed').textContent='';$('progress').style.width='0%';$('answer').disabled=false;$('answer').focus();
+}
+function prepareGame(){
+ $('saveRank').disabled=false;$('rankSavedMessage').textContent='ニックネームを入れて登録してね。';$('nickname').value='';$('furigana').style.display='';$('word').style.display='';$('endOverlay').style.display='none';clearInterval(timer);clearInterval(countTimer);time=duration;score=0;correct=0;miss=0;locked=false;advancing=false;deck=(questionPools[difficulty]||questionPools.normal).slice().sort(()=>Math.random()-.5);resetStreak();$('time').textContent=time;$('score').textContent=score;$('correct').textContent=correct;$('finish').disabled=true;$('finish').textContent='残り5秒で終了できるよ';$('message').textContent='スタート！';pick();view('ready');}
+function startCountdown(){if(screen!=='ready')return;clearInterval(countTimer);stopMusic();view('countdown');$('countText').textContent='よーい！';countTimer=setTimeout(()=>{$('countText').textContent='3';countdownSound();countTimer=setTimeout(()=>{$('countText').textContent='2';countdownSound();countTimer=setTimeout(()=>{$('countText').textContent='1';countdownSound();countTimer=setTimeout(()=>{countdownSound(true);view('play');startMusic('game');$('answer').focus();timer=setInterval(()=>{if(screen!=='play')return;time--;$('time').textContent=time;if(time<=5){$('finish').disabled=false;$('finish').textContent='ここで終了する';}if(time<=0)end();},1000);},700);},700);},700);},500);}
+function restartToReady(){clearInterval(timer);clearTimeout(countTimer);locked=true;startMusic('menu');prepareGame();}
+function chooseDifficulty(level){difficulty=level;duration=70;$('readyLevel').textContent=level==='easy'?'🌱 かんたん（70秒）':level==='hard'?'🔥 むずかしい（70秒）':'🍣 ふつう（70秒）';$('readyTitle').textContent='準備はいい？';$('readyDescription').textContent='「よーい！」のあとにタイピングが始まるよ！';prepareGame();}
+function next(){
+ if(screen!=='play'||locked||advancing)return;
+ advancing=true;
+ score+=100;correct++;
+ $('score').textContent=score;
+ $('correct').textContent=correct;
+ $('message').textContent='🍣 正解！ +100点';
+ goodSound();
+ // Clear the previous answer and synchronously draw the next question.
+ $('answer').value='';
+ $('typed').textContent='';
+ $('progress').style.width='0%';
+ $('furigana').textContent='';
+ try{
+  pick();
+ }catch(err){
+  console.error('次の漢字の表示に失敗:',err);
+  $('message').textContent='問題の読み込みに失敗しました。ESCでリトライしてね。';
+  advancing=false;
+  return;
+ }
+ advancing=false;
+ $('answer').disabled=false;
+ $('answer').focus();
+}
+function inputChanged(){if(screen!=='play'||locked||advancing)return;let el=$('answer');let value=el.value.toLowerCase().replace(/[^a-z]/g,'');if(el.value!==value)el.value=value;
+ if(variants.includes(value)){countCleanLetters(value);next();return;}
+ if(variants.some(v=>v.startsWith(value))){countCleanLetters(value);$('typed').textContent=value;$('progress').style.width=Math.min(100,value.length/Math.max(...variants.map(v=>v.length))*100)+'%';$('message').textContent='入力中…';return;}
+ if(value.length){miss++;resetStreak();badSound();el.value=value.slice(0,-1);lastCountedValue=el.value;$('typed').textContent=el.value;$('progress').style.width='0%';$('message').textContent='❌ もう一度！';}
+}
+function end(){
+ if(screen!=='play')return;
+ clearInterval(timer);stopMusic();locked=true;$('answer').disabled=true;
+ $('message').textContent='終了！';
+ // Show 終了！ in the same area where the target kanji appears.
+ $('furigana').style.display='none';
+ $('word').style.display='none';
+ $('endOverlay').style.display='block';
+ finishBeep();
+ setTimeout(()=>{
+  $('finalScore').textContent=score+'点';
+  $('finalCorrect').textContent=correct;
+  $('finalMiss').textContent=miss;
+  view('result');
+  // Once the result announcement has been on screen, return to the title/menu music.
+  setTimeout(()=>{if(screen==='result')startMusic('menu');},2600);
+ },1900);
+}
+let rankViewLevel=difficulty||'normal';
+function save(){
+ try{
+  const nick=($('nickname').value||'').trim().slice(0,12);
+  if(!nick){$('rankSavedMessage').textContent='ニックネームを入力してね。';$('nickname').focus();return;}
+  let arr=JSON.parse(localStorage.getItem('kanjiSushiRanksByLevel')||'[]');
+  const now=new Date();
+  arr.push({level:difficulty||'normal',nickname:nick,score,correct,datetime:now.toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})});
+  arr.sort((a,b)=>b.score-a.score);
+  localStorage.setItem('kanjiSushiRanksByLevel',JSON.stringify(arr));
+  $('rankSavedMessage').textContent='登録したよ！ランキングに反映されたよ。';
+  $('saveRank').disabled=true;
+ }catch(e){$('rankSavedMessage').textContent='保存できなかったよ。ブラウザの保存設定を確認してね。';}
+}
+function ranks(){
+ let arr=[];try{arr=JSON.parse(localStorage.getItem('kanjiSushiRanksByLevel')||'[]')}catch(e){}
+ const names={easy:'かんたん',normal:'ふつう',hard:'むずかしい'};
+ $('rankLevelTitle').textContent='🏆 '+names[rankViewLevel]+'ランキング TOP10';
+ let filtered=arr.filter(r=>r.level===rankViewLevel).sort((a,b)=>b.score-a.score).slice(0,10);
+ let box=$('rankList');box.innerHTML='';
+ if(!filtered.length){box.textContent='この難易度にはまだ記録がありません。挑戦してみよう！';return;}
+ filtered.forEach((r,i)=>{
+  let row=document.createElement('div');row.className='rankrow';
+  let left=document.createElement('b');left.textContent=['🥇','🥈','🥉'][i]||`${i+1}位`;
+  let right=document.createElement('span');
+  right.textContent=`${r.nickname}　${r.score}点　${r.correct}問　${r.datetime}`;
+  row.append(left,right);box.append(row);
+ });
+}
+function showRanks(){rankViewLevel=difficulty||'normal';ranks();view('ranking');}
+$('start').onclick=()=>{stopMusic();startButtonSound();view('difficulty');setTimeout(()=>startMusic('menu'),240);};
+document.querySelectorAll('.difficulty').forEach(b=>b.addEventListener('click',()=>chooseDifficulty(b.dataset.level)));
+$('difficultyBack').onclick=()=>{stopMusic();view('home');};
+$('readyStart').onclick=startCountdown;
+$('readyBack').onclick=()=>view('difficulty');
+$('again').onclick=()=>{startMusic('menu');prepareGame();startCountdown();};
+$('finish').onclick=()=>{if(time<=5)end();};
+$('homeRank').onclick=showRanks;$('playRank').onclick=showRanks;$('resultRank').onclick=showRanks;
+$('saveRank').onclick=save;
+document.querySelectorAll('.rankLevel').forEach(b=>b.addEventListener('click',()=>{rankViewLevel=b.dataset.rankLevel;ranks();}));
+$('rankBack').onclick=()=>{if(screen==='ranking')view('play');};$('rankHome').onclick=()=>{stopMusic();view('home');};$('resultHome').onclick=()=>{stopMusic();view('home');};
+$('answer').addEventListener('keydown',e=>{
+ if(e.key==='Backspace'||e.key==='Delete'){e.preventDefault();return;}
+});
+$('answer').addEventListener('beforeinput',e=>{
+ if(e.inputType==='deleteContentBackward'||e.inputType==='deleteContentForward'||e.inputType==='deleteByCut'){
+  e.preventDefault();
+ }
+});
+$('answer').addEventListener('input',()=>{if($('answer').value.length)tapSound();inputChanged();});
+$('answer').addEventListener('keydown',e=>{
+ if(e.key==='Enter'){
+  e.preventDefault();
+  if(screen==='play'&&current&&!hintUsed){
+   hintUsed=true;shown=true;$('furigana').textContent=current[1];
+   time=Math.max(0,time-5);$('time').textContent=time;
+   $('message').textContent='ふりがな表示：5秒消費！';
+   if(time<=5){$('finish').disabled=false;$('finish').textContent='ここで終了する';}
+   if(time<=0)end();
+  }
+ }
+ if(e.key==='Escape'){e.preventDefault();if(screen==='play')restartToReady();}
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&screen==='play'){e.preventDefault();restartToReady();}
+ if(e.key==='Enter'&&screen==='ready'){e.preventDefault();startCountdown();}
+});
+})();
+</script>
+</body></html>
